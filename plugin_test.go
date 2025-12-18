@@ -250,7 +250,7 @@ func TestExecute(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create a valid package.json in the temp directory
 	packageJSON := map[string]any{
@@ -269,7 +269,7 @@ func TestExecute(t *testing.T) {
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatalf("failed to change to temp dir: %v", err)
 	}
-	defer os.Chdir(origWd)
+	defer func() { _ = os.Chdir(origWd) }()
 
 	releaseCtx := plugin.ReleaseContext{
 		Version:         "1.2.3",
@@ -584,7 +584,7 @@ func TestValidatePackageDir(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create a subdirectory
 	subDir := filepath.Join(tmpDir, "subdir")
@@ -603,7 +603,7 @@ func TestValidatePackageDir(t *testing.T) {
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatalf("failed to change to temp dir: %v", err)
 	}
-	defer os.Chdir(origWd)
+	defer func() { _ = os.Chdir(origWd) }()
 
 	tests := []struct {
 		name    string
@@ -701,7 +701,7 @@ func TestUpdatePackageVersion(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create temp dir: %v", err)
 		}
-		defer os.RemoveAll(tmpDir)
+		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		packageJSON := map[string]any{
 			"name":    "test-package",
@@ -714,8 +714,10 @@ func TestUpdatePackageVersion(t *testing.T) {
 
 		// Change to temp dir for validation
 		origWd, _ := os.Getwd()
-		os.Chdir(tmpDir)
-		defer os.Chdir(origWd)
+		if err := os.Chdir(tmpDir); err != nil {
+			t.Fatalf("failed to change to temp dir: %v", err)
+		}
+		defer func() { _ = os.Chdir(origWd) }()
 
 		cfg := &Config{PackageDir: "."}
 		releaseCtx := plugin.ReleaseContext{Version: "2.0.0"}
@@ -730,9 +732,14 @@ func TestUpdatePackageVersion(t *testing.T) {
 		}
 
 		// Verify package.json was NOT modified (dry run)
-		data, _ := os.ReadFile(filepath.Join(tmpDir, "package.json"))
+		data, err := os.ReadFile(filepath.Join(tmpDir, "package.json"))
+		if err != nil {
+			t.Fatalf("failed to read package.json: %v", err)
+		}
 		var pkg map[string]any
-		json.Unmarshal(data, &pkg)
+		if err := json.Unmarshal(data, &pkg); err != nil {
+			t.Fatalf("failed to unmarshal package.json: %v", err)
+		}
 		if pkg["version"] != "1.0.0" {
 			t.Errorf("package.json was modified during dry run")
 		}
@@ -743,7 +750,7 @@ func TestUpdatePackageVersion(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create temp dir: %v", err)
 		}
-		defer os.RemoveAll(tmpDir)
+		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		packageJSON := map[string]any{
 			"name":    "test-package",
@@ -756,8 +763,10 @@ func TestUpdatePackageVersion(t *testing.T) {
 
 		// Change to temp dir for validation
 		origWd, _ := os.Getwd()
-		os.Chdir(tmpDir)
-		defer os.Chdir(origWd)
+		if err := os.Chdir(tmpDir); err != nil {
+			t.Fatalf("failed to change to temp dir: %v", err)
+		}
+		defer func() { _ = os.Chdir(origWd) }()
 
 		cfg := &Config{PackageDir: "."}
 		releaseCtx := plugin.ReleaseContext{Version: "2.0.0"}
@@ -772,9 +781,14 @@ func TestUpdatePackageVersion(t *testing.T) {
 		}
 
 		// Verify package.json WAS modified
-		data, _ := os.ReadFile(filepath.Join(tmpDir, "package.json"))
+		data, err := os.ReadFile(filepath.Join(tmpDir, "package.json"))
+		if err != nil {
+			t.Fatalf("failed to read package.json: %v", err)
+		}
 		var pkg map[string]any
-		json.Unmarshal(data, &pkg)
+		if err := json.Unmarshal(data, &pkg); err != nil {
+			t.Fatalf("failed to unmarshal package.json: %v", err)
+		}
 		if pkg["version"] != "2.0.0" {
 			t.Errorf("expected version '2.0.0', got %v", pkg["version"])
 		}
@@ -797,12 +811,14 @@ func TestUpdatePackageVersion(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create temp dir: %v", err)
 		}
-		defer os.RemoveAll(tmpDir)
+		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		// Change to temp dir for validation
 		origWd, _ := os.Getwd()
-		os.Chdir(tmpDir)
-		defer os.Chdir(origWd)
+		if err := os.Chdir(tmpDir); err != nil {
+			t.Fatalf("failed to change to temp dir: %v", err)
+		}
+		defer func() { _ = os.Chdir(origWd) }()
 
 		cfg := &Config{PackageDir: "."}
 		releaseCtx := plugin.ReleaseContext{Version: "2.0.0"}
@@ -822,7 +838,7 @@ func TestUpdatePackageVersion(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create temp dir: %v", err)
 		}
-		defer os.RemoveAll(tmpDir)
+		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		// Write invalid JSON
 		if err := os.WriteFile(filepath.Join(tmpDir, "package.json"), []byte("not json"), 0644); err != nil {
@@ -831,8 +847,10 @@ func TestUpdatePackageVersion(t *testing.T) {
 
 		// Change to temp dir for validation
 		origWd, _ := os.Getwd()
-		os.Chdir(tmpDir)
-		defer os.Chdir(origWd)
+		if err := os.Chdir(tmpDir); err != nil {
+			t.Fatalf("failed to change to temp dir: %v", err)
+		}
+		defer func() { _ = os.Chdir(origWd) }()
 
 		cfg := &Config{PackageDir: "."}
 		releaseCtx := plugin.ReleaseContext{Version: "2.0.0"}
@@ -857,7 +875,7 @@ func TestPublishPackage(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create temp dir: %v", err)
 		}
-		defer os.RemoveAll(tmpDir)
+		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		packageJSON := map[string]any{
 			"name":    "test-publish-package",
@@ -871,8 +889,10 @@ func TestPublishPackage(t *testing.T) {
 
 		// Change to temp dir for validation
 		origWd, _ := os.Getwd()
-		os.Chdir(tmpDir)
-		defer os.Chdir(origWd)
+		if err := os.Chdir(tmpDir); err != nil {
+			t.Fatalf("failed to change to temp dir: %v", err)
+		}
+		defer func() { _ = os.Chdir(origWd) }()
 
 		cfg := &Config{
 			PackageDir: ".",
@@ -909,7 +929,7 @@ func TestPublishPackage(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create temp dir: %v", err)
 		}
-		defer os.RemoveAll(tmpDir)
+		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		packageJSON := map[string]any{
 			"name":    "test-otp-package",
@@ -923,8 +943,10 @@ func TestPublishPackage(t *testing.T) {
 
 		// Change to temp dir for validation
 		origWd, _ := os.Getwd()
-		os.Chdir(tmpDir)
-		defer os.Chdir(origWd)
+		if err := os.Chdir(tmpDir); err != nil {
+			t.Fatalf("failed to change to temp dir: %v", err)
+		}
+		defer func() { _ = os.Chdir(origWd) }()
 
 		cfg := &Config{
 			PackageDir: ".",
@@ -951,7 +973,7 @@ func TestPublishPackage(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create temp dir: %v", err)
 		}
-		defer os.RemoveAll(tmpDir)
+		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		packageJSON := map[string]any{
 			"name":    "private-package",
@@ -965,8 +987,10 @@ func TestPublishPackage(t *testing.T) {
 
 		// Change to temp dir for validation
 		origWd, _ := os.Getwd()
-		os.Chdir(tmpDir)
-		defer os.Chdir(origWd)
+		if err := os.Chdir(tmpDir); err != nil {
+			t.Fatalf("failed to change to temp dir: %v", err)
+		}
+		defer func() { _ = os.Chdir(origWd) }()
 
 		cfg := &Config{PackageDir: "."}
 		releaseCtx := plugin.ReleaseContext{Version: "1.0.0"}
@@ -989,7 +1013,7 @@ func TestPublishPackage(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to create temp dir: %v", err)
 		}
-		defer os.RemoveAll(tmpDir)
+		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		packageJSON := map[string]any{
 			"name":    "test-package",
@@ -1003,8 +1027,10 @@ func TestPublishPackage(t *testing.T) {
 
 		// Change to temp dir for validation
 		origWd, _ := os.Getwd()
-		os.Chdir(tmpDir)
-		defer os.Chdir(origWd)
+		if err := os.Chdir(tmpDir); err != nil {
+			t.Fatalf("failed to change to temp dir: %v", err)
+		}
+		defer func() { _ = os.Chdir(origWd) }()
 
 		cfg := &Config{
 			PackageDir: ".",
