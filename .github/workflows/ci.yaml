@@ -81,7 +81,7 @@ jobs:
           go build -ldflags="-s -w" -o npm_${{ matrix.suffix }}${{ matrix.ext }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: npm_${{ matrix.suffix }}
           path: npm_${{ matrix.suffix }}${{ matrix.ext }}
